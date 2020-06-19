@@ -51,6 +51,7 @@ import (
 var sampleConfig = `
   [[processors.friendlytagger]]
     databasename = "mysqlite.db"
+    reloadfrequency = 3600
 
     countrylabeltable = "country_mappings"
     regionlabeltable = "region_mappings"
@@ -112,13 +113,13 @@ type FriendlyTagger struct {
     // The name of the table where the ASN name mappings are
     AsnLabelTable string
 
-    // If true, then we need to query the database to load the mappings into
-    // memory
-    LoadRequired bool
-
     // The set of code->label mappings, indexed by tag type (e.g.
     // country_code, asn, region_code, etc.)
     Replacements map[string]FriendlyTag
+
+    LastReload int64
+
+    ReloadFrequency int64
 }
 
 // A set of labels for a given code and the timestamps from which those
@@ -156,6 +157,7 @@ func (tagger *FriendlyTagger) SampleConfig() string {
 func (tagger *FriendlyTagger) Description() string {
     return "Add additional human-readable labels for certain tags within time series"
 }
+
 
 /*
 LoadGenericLabels reads the code->label mappings for a given tag type from the
@@ -248,14 +250,20 @@ func (tagger *FriendlyTagger) LoadRegionLabels() {
 // might be present in the metric.
 func (tagger *FriendlyTagger) Apply(in ...telegraf.Metric) []telegraf.Metric {
 
-    // If we haven't read the labels from database yet, do that first.
-    if tagger.LoadRequired {
+    if len(in) < 1 {
+        return in
+    }
+
+    timestamp := in[0].Time().Unix()
+
+    // If we need to read the labels from database yet, do that first.
+    if timestamp - tagger.LastReload >= tagger.ReloadFrequency {
         tagger.Replacements["continent_code"] = FriendlyTag {"continent_code", "continent_label", staticContinents}
         tagger.LoadCountryLabels()
         tagger.LoadCountyLabels()
         tagger.LoadRegionLabels()
         tagger.LoadAsnLabels()
-        tagger.LoadRequired = false
+        tagger.LastReload = timestamp
     }
 
     for i := 0; i < len(in); i++ {
@@ -308,7 +316,7 @@ func (tagger *FriendlyTagger) InsertFriendlyLabels(metric telegraf.Metric) teleg
 // in the config file).
 func init() {
     processors.Add("friendlytagger", func() telegraf.Processor {
-        return &FriendlyTagger{LoadRequired: true, Replacements: make(map[string]FriendlyTag), CountryLabelTable: "country_mappings", CountyLabelTable: "county_mappings", AsnLabelTable: "asn_mappings", RegionLabelTable: "region_mappings"}
+        return &FriendlyTagger{ReloadFrequency: int64(120), Replacements: make(map[string]FriendlyTag), CountryLabelTable: "country_mappings", CountyLabelTable: "county_mappings", AsnLabelTable: "asn_mappings", RegionLabelTable: "region_mappings", LastReload: int64(0)}
     })
 }
 
