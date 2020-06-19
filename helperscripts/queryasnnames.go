@@ -106,8 +106,6 @@ func LoadAsnNames(pageid int32, db *sql.DB) bool {
         log.Fatal(commitErr)
     }
 
-    fmt.Printf("%d %d %t\n", jsonBlob.PageInfo.PageSize, jsonBlob.PageInfo.PageOffset, jsonBlob.PageInfo.HasNextPage)
-
     return jsonBlob.PageInfo.HasNextPage
 }
 
