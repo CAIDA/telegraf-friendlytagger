@@ -31,8 +31,8 @@ Make sure ${GOROOT} is set -- default is usually `/usr/local/go`
 To enable this plugin, add the following to the "Processor Plugins" section of
 your telegraf configuration file:
 
-[[processors.friendlytagger]]
-    databasename = "/path/to/your/labeldatabase"
+    [[processors.friendlytagger]]
+        databasename = "/path/to/your/labeldatabase"
 
 Your label database will be an SQLite3 database containing all of the tag to
 label mappings that the plugin can apply. See `../helperscripts` for more
