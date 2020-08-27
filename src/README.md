@@ -23,7 +23,7 @@ Make sure ${GOROOT} is set -- default is usually `/usr/local/go`
     cp friendlytagger.go ${GOROOT}/src/github.com/influxdata/telegraf/plugins/processors/friendlytagger/
     sed -i '8i\        _ "github.com/influxdata/telegraf/plugins/processors/friendlytagger"' ${GOROOT}/src/github.com/influxdata/telegraf/plugins/processors/all/all.go
 
-    cd ${GOROOT}/src/github.com/influxdata/telegraf/ && make go-install
+    cd ${GOROOT}/src/github.com/influxdata/telegraf/ && make && go install -ldflags "-w -s" ./cmd/telegraf
 
 
 ### Configuration

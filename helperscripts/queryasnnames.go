@@ -69,7 +69,7 @@ func LoadAsnNames(pageid int32, db *sql.DB) bool {
 
     var ctx context.Context
 
-    url := fmt.Sprintf("https://api.panda.caida.org/as2org/dev/asns/?verbose=true&page=%d", pageid)
+    url := fmt.Sprintf("https://api.data.caida.org/as2org/dev/asns/?verbose=true&page=%d", pageid)
 
     client := http.Client{ Timeout: time.Second * 10}
 
