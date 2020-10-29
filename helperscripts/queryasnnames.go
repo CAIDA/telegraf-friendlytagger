@@ -37,6 +37,19 @@ import (
     _ "github.com/mattn/go-sqlite3"
 )
 
+type AsOrg struct {
+    Id          int32
+    Score       int32
+    OrgId       string
+    OrgName     string
+    Country     string
+    Source      string
+    Members     []string
+    Changed     string
+    Date        string
+    Ts          string
+}
+
 type PandaAs struct {
     Id          int32
     Score       int32
@@ -44,7 +57,7 @@ type PandaAs struct {
     AsnName     string
     Country     string
     Source      string
-    OrgId       string
+    OrgId       AsOrg
     OpaqueId    string
     Changed     string
     Date        string
@@ -114,16 +127,16 @@ func LoadAsnNames(pageid int32, db *sql.DB) bool {
             log.Fatal(timeErr)
         }
 
-        query := "INSERT OR IGNORE INTO asn_mappings(code, label, apply_from) VALUES (?, ?, ?)"
+        query := "INSERT OR IGNORE INTO asn_mappings(code, label, orgname, apply_from) VALUES (?, ?, ?, ?)"
         combinedName := fmt.Sprintf("%s, %s", asn.AsnName, asn.Country)
 
-        _, queryErr := tx.Exec(query, asn.Asn, combinedName, t.Unix())
+        _, queryErr := tx.Exec(query, asn.Asn, combinedName, asn.OrgId.OrgName, t.Unix())
         if queryErr != nil {
             _ = tx.Rollback()
             log.Fatal(queryErr);
         }
-        fmt.Printf("%s %s, %s -- %d\n", asn.Asn, asn.AsnName, asn.Country,
-                t.Unix())
+        fmt.Printf("%s %s, %s (%s) -- %d\n", asn.Asn, asn.AsnName, asn.Country,
+              asn.OrgId.OrgName, t.Unix())
     }
 
     if commitErr := tx.Commit(); commitErr != nil {
@@ -140,7 +153,7 @@ func main() {
         log.Fatal(err)
     }
 
-    tabcreate := "CREATE TABLE IF NOT EXISTS asn_mappings (code text NOT NULL, label text NOT NULL, apply_from INTEGER, apply_to INTEGER, UNIQUE(code, apply_from))"
+    tabcreate := "CREATE TABLE IF NOT EXISTS asn_mappings (code text NOT NULL, label text NOT NULL, orgname text, apply_from INTEGER, apply_to INTEGER, UNIQUE(code, apply_from))"
 
     _, err = db.Exec(tabcreate)
     if err != nil {
