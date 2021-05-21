@@ -6,7 +6,7 @@ import wandio
 regioncodes = "http://loki.caida.org:3282/gadm/polygons/gadm.counties.v2.0.processed.polygons.csv.gz"
 
 try:
-        with wandio.open(regioncodes, decode=True, encoding='utf-8') as fh:
+        with wandio.open(regioncodes, mode='rb') as fh:
                 for l in fh:
                         if ',' not in l:
                                 continue
